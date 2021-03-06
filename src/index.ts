@@ -43,7 +43,8 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
       }
 
       if (opts.verifyRefs) {
-        await verifyRefsForDocument(model, doc);
+        // pack params to context obj
+        await verifyRefsForDocument(connection, model, doc);
       }
     }
   }
@@ -61,7 +62,29 @@ async function verifySchemaForDocument( doc: Document) {
   }
 }
 
-async function verifyRefsForDocument(model: Model<any>, doc: Document, ) {
+// TODO: support for nested refs and array refs
+async function verifyRefsForDocument(connection: Connection, model: Model<any>, doc: Document) {
+  const keys = Object.keys(model.schema.paths);
+
+  for (const key of keys) {
+    const type = model.schema.paths[key] as any;
+    const options = type.options;
+
+    // ref and required!
+    if (options.ref && options.required) {
+      const refValue = doc.get(key);
+
+      if (!refValue) {
+        logger.error(`\tref ${key} is required, but missing`)
+        continue;
+      }
+
+      const exists = await connection.models[options.ref].exists({ _id: refValue });
+      if (!exists) {
+        logger.error(`\tref ${key} is required, but not found`)
+      }
+    }
+  }
 }
 
 async function main() {
