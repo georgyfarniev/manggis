@@ -32,9 +32,11 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
   const models = Object.values(connection.models);
 
   for (const model of models) {
+    logger.info('Checking model: ' + model.modelName)
 
     const cursor = model.find();
     for await (const doc of cursor) {
+      logger.info('    Checking doc: ' + doc._id)
       if (opts.verifySchema) {
         await verifySchemaForDocument(doc);
       }
