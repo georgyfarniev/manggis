@@ -32,7 +32,8 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
   const models = Object.values(connection.models);
 
   for (const model of models) {
-    logger.info('Checking model: ' + model.modelName)
+    const count = await model.countDocuments();
+    logger.info(`Checking model: ${model.modelName}, documents count: ${count}`);
 
     const cursor = model.find();
     for await (const doc of cursor) {
@@ -64,7 +65,7 @@ async function verifyRefsForDocument(model: Model<any>, doc: Document, ) {
 }
 
 async function main() {
-  const { default: loadMongoose } = await import('./_manggisfile');
+  const { default: loadMongoose } = await import('./_manggisfile_test');
   const connection: Connection = await loadMongoose();
   await verifyMongooseConnection(connection, {
     verifyRefs: true,

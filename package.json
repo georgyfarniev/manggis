@@ -24,7 +24,11 @@
   },
   "homepage": "https://github.com/georgyfarniev/manggis#readme",
   "dependencies": {
+    "@types/mongodb": "^3.6.8",
+    "@types/mongodb-memory-server": "^2.3.0",
     "@types/yargs": "^16.0.0",
+    "mongodb": "^3.6.4",
+    "mongodb-memory-server": "^6.9.3",
     "mongoose": "^5.11.14",
     "yargs": "^16.2.0"
   },
