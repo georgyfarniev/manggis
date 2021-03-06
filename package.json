@@ -24,7 +24,9 @@
   },
   "homepage": "https://github.com/georgyfarniev/manggis#readme",
   "dependencies": {
-    "mongoose": "^5.11.14"
+    "@types/yargs": "^16.0.0",
+    "mongoose": "^5.11.14",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "@types/mongoose": "^5.10.3",

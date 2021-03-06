@@ -1,6 +1,24 @@
-import { Mongoose, Model } from 'mongoose';
+import assert from 'assert';
+import { Model, Connection, Document } from 'mongoose';
 
-async function main() {
+// logger stub
+const logger = {
+  info(msg: string) {
+    console.log(msg)
+  },
+  error(msg: string) {
+    console.error(msg);
+  }
+}
+
+
+// Validator execution context
+interface IValidationOptions {
+  verifySchema: boolean
+  verifyRefs: boolean
+}
+
+async function verifyMongooseConnection(connection: Connection, opts: IValidationOptions) {
   /**
    * 1. Load schema object
    * 2. Validate all documents in collection with schema
@@ -9,36 +27,47 @@ async function main() {
    * 4. Create convenient report on per-collection basis
    */
 
-  // const mongoose = await getMongooseInstance();
-  const { default: loadMongoose } = await import('./_manggisfile');
+  assert(opts.verifyRefs || opts.verifySchema, 'at least one validation option is a must');
 
-  const mongoose: Mongoose = await loadMongoose();
-  const models = Object.values(mongoose.models);
+  const models = Object.values(connection.models);
 
-  // console.dir(Object.keys(mongoose.models))
-
-  // Checking schema integrity
   for (const model of models) {
-    await verifyModel(model);
+
+    const cursor = model.find();
+    for await (const doc of cursor) {
+      if (opts.verifySchema) {
+        await verifySchemaForDocument(doc);
+      }
+
+      if (opts.verifyRefs) {
+        await verifyRefsForDocument(model, doc);
+      }
+    }
   }
 
-  console.log('all models has been verified');
+  logger.info('all models has been verified');
   process.exit();
 }
 
-async function verifyModel(model: Model<any>) {
-  console.log('verifying model:', model.modelName)
-  const cursor = model.find();
 
-  for await (const doc of cursor) {
-    // Verify schema
-    await doc.validate()
-
-    // Verify ref integrity
-
-    // 1) Find refs in schema obj 2) Populate this refs 3) Verify that refs are populated
-    // model.schema.obj
+async function verifySchemaForDocument( doc: Document) {
+  try {
+    await doc.validate();
+  } catch (err) {
+    logger.error(`validation error for doc with id: ${doc._id}: ${err.message}`)
   }
+}
+
+async function verifyRefsForDocument(model: Model<any>, doc: Document, ) {
+}
+
+async function main() {
+  const { default: loadMongoose } = await import('./_manggisfile');
+  const connection: Connection = await loadMongoose();
+  await verifyMongooseConnection(connection, {
+    verifyRefs: true,
+    verifySchema: true
+  });
 }
 
 if (require.main === module) {
