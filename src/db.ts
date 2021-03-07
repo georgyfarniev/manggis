@@ -34,7 +34,10 @@ const Bar = mongoose.model('Bar', BarSchema);
 export async function createTestDatabase() {
   const DB_URL = await mongod.getUri();
 
-  await mongoose.connect(DB_URL);
+  await mongoose.connect(DB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  });
 
   const [bar1, bar2] = await Bar.create([
     { title: 'bar1' },
