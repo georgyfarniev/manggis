@@ -57,7 +57,7 @@ export async function createTestDatabase() {
     {
       name: 'foo1',
       bar: bar1._id,
-      subdoc: { field: 111, bar: bar2._id },
+      subdoc: { field: 111, bar: bar2._id, subsubdoc: { param: 123 } },
       subarray: [{ field: 222, bar: bar1._id }],
       refarray:[nonexistingId]
     },

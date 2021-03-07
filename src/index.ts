@@ -99,25 +99,48 @@ async function verifyRefsForDocument(connection: Connection, model: Model<any>, 
   }
 }
 
-// Traversing schema to find and validate each ref
-async function traverseSchema(schema: Schema, path: string = '') {
+interface ITraverseContext {
+  doc: Document
+  schema: Schema
+  isArray: boolean
+  path: string
+}
 
-  const applyPath = (key: string) => path ? `${path}.${key}` : key
+// Traversing schema to find and validate each ref
+// async function traverseSchema(schema: Schema, path: string = '') {
+async function traverseSchema(ctx: ITraverseContext) {
+  const applyPath = (key: string) => ctx.path ? `${ctx.path}.${key}` : key
 
   // paths are not fully typed yet!
-  const entries: any = Object.entries(schema.paths);
+  const entries: any = Object.entries(ctx.schema.paths);
   for (const [key, type] of entries) {
 
     const ctor = type.constructor.name;
 
     if ('SingleNestedPath' === ctor) {
       // nested subdocument
-      await traverseSchema(type.schema, applyPath(key))
+      // await traverseSchema(type.schema, applyPath(key))
+      await traverseSchema({
+        schema: type.schema,
+        isArray: false,
+        doc: ctx.doc,
+        path: applyPath(key)
+      })
     } else if ('DocumentArrayPath' === ctor) {
+      const kPath = applyPath(key);
+      console.log('\t', kPath)
+      await traverseSchema({
+        schema: type.schema,
+        isArray: true,
+        doc: ctx.doc,
+        path: kPath
+      })
+
       // nested subdocument array
-      await traverseSchema(type.schema, applyPath(key))
+      // await traverseSchema(type.schema, kPath)
     } else {
-      console.log('leaf:', applyPath(key))
+      if (type.options.ref)
+        console.log('leaf:', applyPath(key))
     }
   }
 }
@@ -130,7 +153,15 @@ async function main() {
   const { default: loadMongoose } = await import('./_manggisfile_test');
   const connection: Connection = await loadMongoose();
 
-  await traverseSchema(connection.models.Foo.schema);
+  const doc = connection.models.Foo.findOne({ name: 'foo1' });
+
+  await traverseSchema({
+    schema: connection.models.Foo.schema,
+    doc,
+    isArray: false,
+    path: ''
+  });
+
   // await verifyMongooseConnection(connection, {
   //   verifyRefs: true,
   //   verifySchema: true
