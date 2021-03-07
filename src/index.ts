@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Model, Connection, Document } from 'mongoose';
+import { Model, Connection, Document, Schema } from 'mongoose';
 
 // logger stub
 const logger = {
@@ -68,6 +68,15 @@ async function verifyRefsForDocument(connection: Connection, model: Model<any>, 
 
   for (const key of keys) {
     const type = model.schema.paths[key] as any;
+
+
+    const schemaType = type.constructor.name;
+
+    if (schemaType === 'SingleNestedPath') {} // nested subdocument
+    else if (schemaType === 'DocumentArrayPath') {} // nested subdocument array
+    else if (schemaType === 'SchemaArray') {} // arrays if objectid's
+    // console.dir(type)
+    // break;
     const options = type.options;
 
     // ref and required!
