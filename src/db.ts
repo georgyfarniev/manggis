@@ -9,11 +9,17 @@ import { ObjectId } from 'mongodb'
 const mongod = new MongoMemoryServer();
 // const DB_URL = 'mongodb://localhost:27017/manggis_test'
 
+const DeepNestedSchema: Schema = new Schema({
+  param: { type: Number, required: true },
+});
+
 const NestedSchema: Schema = new Schema({
   field: { type: Number, required: true },
   bar: { type: Schema.Types.ObjectId, ref: 'Bar', required: true },
+  subsubdoc: DeepNestedSchema
 });
 
+// TODO: even more complex scenarios, such as deeply nested arrays of subdocuments
 const FooSchema: Schema = new Schema({
   name: { type: String, required: true },
   bar: { type: Schema.Types.ObjectId, ref: 'Bar', required: true },

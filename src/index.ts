@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Model, Connection, Document, Schema } from 'mongoose';
+import { Model, Connection, Document, Schema, SchemaType } from 'mongoose';
 
 // logger stub
 const logger = {
@@ -66,6 +66,9 @@ async function verifySchemaForDocument( doc: Document) {
 async function verifyRefsForDocument(connection: Connection, model: Model<any>, doc: Document) {
   const keys = Object.keys(model.schema.paths);
 
+  // console.dir( model.schema.paths.refarray.constructor.name)
+  // process.exit(0)
+
   for (const key of keys) {
     const type = model.schema.paths[key] as any;
 
@@ -96,13 +99,44 @@ async function verifyRefsForDocument(connection: Connection, model: Model<any>, 
   }
 }
 
+// Traversing schema to find and validate each ref
+async function traverseSchema(schema: Schema, path: string = '') {
+
+  const applyPath = (key: string) => path ? `${path}.${key}` : key
+
+  // paths are not fully typed yet!
+  const entries: any = Object.entries(schema.paths);
+  for (const [key, type] of entries) {
+
+    const ctor = type.constructor.name;
+
+    if ('SingleNestedPath' === ctor) {
+      // nested subdocument
+      await traverseSchema(type.schema, applyPath(key))
+    } else if ('DocumentArrayPath' === ctor) {
+      // nested subdocument array
+      await traverseSchema(type.schema, applyPath(key))
+    } else {
+      console.log('leaf:', applyPath(key))
+    }
+  }
+}
+
+async function traverseSubdocumentSchema(doc: SchemaType) {
+  
+}
+
 async function main() {
   const { default: loadMongoose } = await import('./_manggisfile_test');
   const connection: Connection = await loadMongoose();
-  await verifyMongooseConnection(connection, {
-    verifyRefs: true,
-    verifySchema: true
-  });
+
+  await traverseSchema(connection.models.Foo.schema);
+  // await verifyMongooseConnection(connection, {
+  //   verifyRefs: true,
+  //   verifySchema: true
+  // });
+
+  process.exit()
 }
 
 if (require.main === module) {
