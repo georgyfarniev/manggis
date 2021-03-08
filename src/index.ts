@@ -1,6 +1,6 @@
 import assert from 'assert';
 import mongoose, { Connection, Schema } from 'mongoose';
-import type { IValidationContext, IValidationOptions, IValidationError } from './types';
+import type { IValidationContext, IValidationOptions } from './types';
 
 /**
  * TODO list:
@@ -10,16 +10,6 @@ import type { IValidationContext, IValidationOptions, IValidationError } from '.
  * 4. Advertise it in blogs or social networks
  * 5. Statistics
  */
-
-// logger stub
-const logger = {
-  info(msg: string) {
-    console.log(msg)
-  },
-  error(msg: string) {
-    console.error(msg);
-  }
-}
 
 export async function verifyMongooseConnection(connection: Connection, opts: IValidationOptions) {
   assert(opts.verifyRefs || opts.verifySchema, 'at least one validation option is a must');
@@ -35,12 +25,12 @@ export async function verifyMongooseConnection(connection: Connection, opts: IVa
     // Only for refs need to create custom model
     const validationModel = opts.verifyRefs ? createEnhancedModel({ ...ctx, model }) : model;
 
-    const count = await validationModel.countDocuments();
-    logger.info(`Checking model: ${model.modelName}, documents count: ${count}`);
+    if (opts.onModel) await opts.onModel(model);
 
     const cursor = validationModel.find();
     for await (const doc of cursor) {
-      logger.info('    Checking doc: ' + doc._id)
+      if (opts.onDocument) await opts.onDocument(doc);
+
       if (opts.verifySchema) {
         const docCtx = { ...ctx, model: validationModel, doc }
         await verifySchemaForDocument(docCtx);
