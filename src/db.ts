@@ -22,17 +22,7 @@ const NestedSchema: Schema = new Schema({
 // TODO: even more complex scenarios, such as deeply nested arrays of subdocuments
 const FooSchema: Schema = new Schema({
   name: { type: String, required: true },
-  bar: {
-    type: Schema.Types.ObjectId,
-    ref: 'Bar',
-    required: true,
-    validate: {
-      validator: async (value: any) => {
-        console.log('Calling original validator as well!');
-        return true;
-      }
-    }
-  },
+  bar: { type: Schema.Types.ObjectId, ref: 'Bar', required: true },
   barOptional: { type: Schema.Types.ObjectId, ref: 'Bar', required: false },
   subdoc: NestedSchema,
   subarray: [NestedSchema],

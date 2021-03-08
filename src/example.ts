@@ -1,6 +1,6 @@
 
 import { Connection } from 'mongoose';
-import { verifyMongooseConnection } from '.'
+import { validate } from '.'
 
 const MG_TEMP_MODEL_PREFIX = '__manggis_model__';
 
@@ -8,12 +8,18 @@ async function main() {
   const { default: loadMongoose } = await import('./_manggisfile_test');
   const connection: Connection = await loadMongoose();
 
-  await verifyMongooseConnection(connection, {
+  await validate(connection, {
     tempModelNamePrefix: MG_TEMP_MODEL_PREFIX,
     verifyRefs: true,
     verifySchema: true,
-    onError: async (ctx) => {
-      console.dir(ctx);
+    onError: ({ model, path, message}) => {
+      console.log(`    error [${model}.${path}]: ${message}`)
+    },
+    onModel(model) {
+      console.log('validating model:', model.modelName);
+    },
+    onDocument(doc) {
+      console.log('  validating document:', doc._id);
     }
   });
 

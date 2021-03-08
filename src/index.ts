@@ -5,13 +5,12 @@ import type { IValidationContext, IValidationOptions } from './types';
 /**
  * TODO list:
  * 1. Optionally allow to specify query filters (by exposing lower level api)
- * 2. Allow custom reporting api (via callbacks or async iterables)
- * 3. Unit tests
- * 4. Advertise it in blogs or social networks
- * 5. Statistics
+ * 2. Unit tests
+ * 3. Advertise it in blogs or social networks
+ * 4. Allow hooks to cancel execution of certain tests
  */
 
-export async function verifyMongooseConnection(connection: Connection, opts: IValidationOptions) {
+export async function validate(connection: Connection, opts: IValidationOptions) {
   assert(opts.verifyRefs || opts.verifySchema, 'at least one validation option is a must');
 
   const ctx: IValidationContext = {
@@ -60,9 +59,7 @@ async function verifySchemaForDocument(ctx: IValidationContext) {
   try {
     await ctx.doc!.validate();
   } catch (err) {
-    const { onError } = ctx.options;
-
-    if (err instanceof mongoose.Error.ValidationError && onError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       await reportValidationErrors({ ...ctx, err });
     } else {
       assert(false, 'Unknown error!');
@@ -73,6 +70,9 @@ async function verifySchemaForDocument(ctx: IValidationContext) {
 async function reportValidationErrors(ctx: IValidationContext) {
   const { options, doc, err } = ctx;
   const { onError, tempModelNamePrefix } = options;
+
+  if (!onError) return;
+
   const model = ctx.model!.modelName.replace(tempModelNamePrefix, '');
 
   for (const error of Object.values(err!.errors)) {
@@ -101,7 +101,7 @@ function installRefValidator(connection: Connection, schema: Schema) {
             const exists = await refModel.exists({ _id: value });
             return exists;
           },
-          message: 'Referenced document not found'
+          message: (props: any) => `Referenced document not found: ${props.value}`
       })
     }
   }

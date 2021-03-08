@@ -1,8 +1,8 @@
 import { Connection, Document, Model, Error } from 'mongoose';
 
-export type OnErrorHook = (ctx: IValidationError) => Promise<void>
-export type OnModelHook = (model: Model<any>) => Promise<void>
-export type OnDocumentHook = (doc: Document) => Promise<void>
+export type OnErrorHook = (ctx: IValidationError) => Promise<void>|void
+export type OnModelHook = (model: Model<any>) => Promise<void>|void
+export type OnDocumentHook = (doc: Document) => Promise<void>|void
 
 
 // Validator execution context
@@ -13,7 +13,7 @@ export interface IValidationOptions {
   verifyRefs: boolean
 
   // Fired once error received (per-field basis)
-  onError: OnErrorHook
+  onError?: OnErrorHook
 
   // Fired once model processing started
   onModel?: OnModelHook
