@@ -1,6 +1,14 @@
 import assert from 'assert';
 import mongoose, { Connection, Document, Model, Schema } from 'mongoose';
 
+/**
+ * TODO list:
+ * 1. Optionally allow to specify query filters (by exposing lower level api)
+ * 2. Allow custom reporting api (via callbacks or async iterables)
+ * 3. Unit tests
+ * 4. Advertise it in blogs or social networks
+ */
+
 // logger stub
 const logger = {
   info(msg: string) {
@@ -11,10 +19,22 @@ const logger = {
   }
 }
 
+type OnErrorHook = (ctx: IValidationError) => Promise<void>
+
 // Validator execution context
+// TODO: add defaults
 interface IValidationOptions {
+  tempModelNamePrefix: string
   verifySchema: boolean
   verifyRefs: boolean
+  onError?: OnErrorHook
+}
+
+interface IValidationError {
+  model: string
+  document: string
+  path: string
+  message: string
 }
 
 async function verifyMongooseConnection(connection: Connection, opts: IValidationOptions) {
@@ -33,7 +53,7 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
     for await (const doc of cursor) {
       logger.info('    Checking doc: ' + doc._id)
       if (opts.verifySchema) {
-        await verifySchemaForDocument(doc);
+        await verifySchemaForDocument(doc, opts);
       }
     }
 
@@ -44,6 +64,7 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
   process.exit();
 }
 
+
 function createEnhancedModel(connection: Connection, model: Model<any>, opts: IValidationOptions) {
   const schema = model.schema.clone();
 
@@ -51,15 +72,35 @@ function createEnhancedModel(connection: Connection, model: Model<any>, opts: IV
     installRefValidator(connection, schema);
   }
 
-  const name = `__manggis_model__${model.modelName}`
+  const name = `${opts.tempModelNamePrefix}${model.modelName}`
   return mongoose.model(name, schema, model.collection.collectionName);
 }
 
-async function verifySchemaForDocument( doc: Document) {
+async function verifySchemaForDocument(doc: Document, opts: IValidationOptions) {
   try {
     await doc.validate();
   } catch (err) {
-    logger.error(`validation error for doc with id: ${doc._id}: ${err.message}`)
+    if (err instanceof mongoose.Error.ValidationError && opts.onError) {
+      await reportValidationErrors(doc, err, opts.onError);
+    } else {
+      // fatal error
+    }
+
+    // console.log('reason:', err?.errors?.bar?.properties?.message)
+
+    // const errorMessage = err?.message?.replace(MG_TEMP_MODEL_PREFIX, '')
+    // logger.error(`validation error for doc with id: ${doc._id}: ${errorMessage}`)
+  }
+}
+
+async function reportValidationErrors(doc: Document, err: mongoose.Error.ValidationError, cb: OnErrorHook) {
+  for (const error of Object.values(err.errors)) {
+    await cb({
+      document: doc._id.toString(),
+      model: doc.modelName,
+      path: error.path,
+      message: error.message
+    })
   }
 }
 
@@ -81,13 +122,19 @@ function installRefValidator(connection: Connection, schema: Schema) {
   }
 }
 
+const MG_TEMP_MODEL_PREFIX = '__manggis_model__';
+
 async function main() {
   const { default: loadMongoose } = await import('./_manggisfile_test');
   const connection: Connection = await loadMongoose();
 
   await verifyMongooseConnection(connection, {
+    tempModelNamePrefix: MG_TEMP_MODEL_PREFIX,
     verifyRefs: true,
-    verifySchema: true
+    verifySchema: true,
+    onError: async (ctx) => {
+      console.dir(ctx);
+    }
   });
 
   process.exit()
