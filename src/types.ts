@@ -8,9 +8,9 @@ export type OnDocumentHook = (doc: Document) => Promise<void>|void
 // Validator execution context
 // TODO: add defaults
 export interface IValidationOptions {
-  tempModelNamePrefix: string
-  verifySchema: boolean
-  verifyRefs: boolean
+  tempModelNamePrefix?: string
+  verifySchema?: boolean
+  verifyRefs?: boolean
 
   // Fired once error received (per-field basis)
   onError?: OnErrorHook

@@ -10,33 +10,42 @@ import type { IValidationContext, IValidationOptions } from './types';
  * 4. Allow hooks to cancel execution of certain tests
  */
 
+
+const DEFAULT_OPTIONS: IValidationOptions = {
+  tempModelNamePrefix: '__manggis_model__',
+  verifyRefs: true,
+  verifySchema: true
+}
+
 export async function validate(connection: Connection, opts: IValidationOptions) {
-  assert(opts.verifyRefs || opts.verifySchema, 'at least one validation option is a must');
+  const options: IValidationOptions = { ...opts, ...DEFAULT_OPTIONS };
+
+  assert(options.verifyRefs || options.verifySchema, 'at least one validation option is a must');
 
   const ctx: IValidationContext = {
     connection,
-    options: opts,
+    options,
   }
 
   const models = Object.values(connection.models);
 
   for (const model of models) {
     // Only for refs need to create custom model
-    const validationModel = opts.verifyRefs ? createEnhancedModel({ ...ctx, model }) : model;
+    const validationModel = options.verifyRefs ? createEnhancedModel({ ...ctx, model }) : model;
 
-    if (opts.onModel) await opts.onModel(model);
+    if (options.onModel) await options.onModel(model);
 
     const cursor = validationModel.find();
     for await (const doc of cursor) {
-      if (opts.onDocument) await opts.onDocument(doc);
+      if (options.onDocument) await options.onDocument(doc);
 
-      if (opts.verifySchema) {
+      if (options.verifySchema) {
         const docCtx = { ...ctx, model: validationModel, doc }
         await verifySchemaForDocument(docCtx);
       }
     }
 
-    if (opts.verifyRefs) {
+    if (options.verifyRefs) {
       mongoose.deleteModel(validationModel.modelName)
     }
   }
@@ -73,7 +82,7 @@ async function reportValidationErrors(ctx: IValidationContext) {
 
   if (!onError) return;
 
-  const model = ctx.model!.modelName.replace(tempModelNamePrefix, '');
+  const model = ctx.model!.modelName.replace(tempModelNamePrefix!, '');
 
   for (const error of Object.values(err!.errors)) {
     await onError({
