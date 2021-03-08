@@ -1,5 +1,6 @@
 import assert from 'assert';
-import mongoose, { Connection, Document, Model, Schema } from 'mongoose';
+import mongoose, { Connection, Schema } from 'mongoose';
+import type { IValidationContext, IValidationOptions, IValidationError } from './types';
 
 /**
  * TODO list:
@@ -7,6 +8,7 @@ import mongoose, { Connection, Document, Model, Schema } from 'mongoose';
  * 2. Allow custom reporting api (via callbacks or async iterables)
  * 3. Unit tests
  * 4. Advertise it in blogs or social networks
+ * 5. Statistics
  */
 
 // logger stub
@@ -19,33 +21,7 @@ const logger = {
   }
 }
 
-type OnErrorHook = (ctx: IValidationError) => Promise<void>
-
-// Validator execution context
-// TODO: add defaults
-interface IValidationOptions {
-  tempModelNamePrefix: string
-  verifySchema: boolean
-  verifyRefs: boolean
-  onError: OnErrorHook
-}
-
-interface IValidationError {
-  model: string
-  document: string
-  path: string
-  message: string
-}
-
-interface IValidationContext {
-  options: IValidationOptions
-  connection: Connection
-  model?: Model<any>
-  doc?: Document
-  err?: mongoose.Error.ValidationError
-}
-
-async function verifyMongooseConnection(connection: Connection, opts: IValidationOptions) {
+export async function verifyMongooseConnection(connection: Connection, opts: IValidationOptions) {
   assert(opts.verifyRefs || opts.verifySchema, 'at least one validation option is a must');
 
   const ctx: IValidationContext = {
@@ -58,8 +34,6 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
   for (const model of models) {
     // Only for refs need to create custom model
     const validationModel = opts.verifyRefs ? createEnhancedModel({ ...ctx, model }) : model;
-
-    // ctx.model = validationModel;
 
     const count = await validationModel.countDocuments();
     logger.info(`Checking model: ${model.modelName}, documents count: ${count}`);
@@ -77,9 +51,6 @@ async function verifyMongooseConnection(connection: Connection, opts: IValidatio
       mongoose.deleteModel(validationModel.modelName)
     }
   }
-
-  logger.info('all models has been verified');
-  process.exit();
 }
 
 function createEnhancedModel(ctx: IValidationContext) {
@@ -144,28 +115,4 @@ function installRefValidator(connection: Connection, schema: Schema) {
       })
     }
   }
-}
-
-// -------------------------------------------------------------------------------------------------
-
-const MG_TEMP_MODEL_PREFIX = '__manggis_model__';
-
-async function main() {
-  const { default: loadMongoose } = await import('./_manggisfile_test');
-  const connection: Connection = await loadMongoose();
-
-  await verifyMongooseConnection(connection, {
-    tempModelNamePrefix: MG_TEMP_MODEL_PREFIX,
-    verifyRefs: false,
-    verifySchema: true,
-    onError: async (ctx) => {
-      console.dir(ctx);
-    }
-  });
-
-  process.exit()
-}
-
-if (require.main === module) {
-  main()
 }

@@ -2,7 +2,8 @@
   "name": "manggis",
   "version": "0.1.0",
   "description": "Mongoose schema and ref integrity validator",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
