@@ -51,7 +51,7 @@ export async function validate(connection: Connection, opts: IValidationOptions)
   }
 }
 
-function createEnhancedModel(ctx: IValidationContext) {
+export function createEnhancedModel(ctx: IValidationContext) {
   const schema = ctx.model!.schema.clone();
 
   const { tempModelNamePrefix, verifyRefs } = ctx.options
@@ -64,7 +64,7 @@ function createEnhancedModel(ctx: IValidationContext) {
   return mongoose.model(name, schema, ctx.model!.collection.collectionName);
 }
 
-async function verifySchemaForDocument(ctx: IValidationContext) {
+export async function verifySchemaForDocument(ctx: IValidationContext) {
   try {
     await ctx.doc!.validate();
   } catch (err) {
@@ -76,7 +76,7 @@ async function verifySchemaForDocument(ctx: IValidationContext) {
   }
 }
 
-async function reportValidationErrors(ctx: IValidationContext) {
+export async function reportValidationErrors(ctx: IValidationContext) {
   const { options, doc, err } = ctx;
   const { onError, tempModelNamePrefix } = options;
 
@@ -94,7 +94,7 @@ async function reportValidationErrors(ctx: IValidationContext) {
   }
 }
 
-function installRefValidator(connection: Connection, schema: Schema) {
+export function installRefValidator(connection: Connection, schema: Schema) {
   // paths are not fully typed yet!
   for (const type of Object.values<any>(schema.paths)) {
     if (type.schema) {
