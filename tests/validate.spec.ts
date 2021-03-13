@@ -1,7 +1,7 @@
 import 'jest'
 import {  Model, Connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import { createEnhancedModel, verifySchemaForDocument } from '../src'
+import { createEnhancedModel, verifySchemaForDocument } from '../src/validation'
 import { IValidationError, IValidationOptions } from '../src/types';
 import { createTestDatabase, destroyTestDatabase } from './_db'
 import { BAR_ROWS } from './_mock';
