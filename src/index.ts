@@ -4,12 +4,12 @@ import type { IValidationContext, IValidationOptions } from './types';
 
 /**
  * TODO list:
+ * 0. Get rid off context and pass only used parameters explicitly
  * 1. Optionally allow to specify query filters (by exposing lower level api)
  * 2. Unit tests
  * 3. Advertise it in blogs or social networks
  * 4. Allow hooks to cancel execution of certain tests
  */
-
 
 const DEFAULT_OPTIONS: IValidationOptions = {
   tempModelNamePrefix: '__manggis_model__',
@@ -71,7 +71,8 @@ export async function verifySchemaForDocument(ctx: IValidationContext) {
     if (err instanceof mongoose.Error.ValidationError) {
       await reportValidationErrors({ ...ctx, err });
     } else {
-      assert(false, 'Unknown error!');
+      throw err;
+      // assert(false, 'Unknown error!');
     }
   }
 }

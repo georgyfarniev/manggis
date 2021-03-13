@@ -9,6 +9,8 @@ export type OnDocumentHook = (doc: Document) => Promise<void>|void
 // TODO: add defaults
 export interface IValidationOptions {
   tempModelNamePrefix?: string
+
+  // TODO: schema always will be verified, only turn on or off refs validation!
   verifySchema?: boolean
   verifyRefs?: boolean
 

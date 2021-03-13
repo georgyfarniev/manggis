@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Refs validation advanced test 1`] = `
+Array [
+  Object {
+    "document": "604c44c8bb7e660d2c36e4c8",
+    "message": "Path \`bar\` is required.",
+    "model": "Foo",
+    "path": "bar",
+  },
+]
+`;
