@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "watch": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -25,9 +26,13 @@
   },
   "homepage": "https://github.com/georgyfarniev/manggis#readme",
   "dependencies": {
+    "@babel/preset-env": "^7.13.10",
+    "@babel/preset-typescript": "^7.13.0",
+    "@types/jest": "^26.0.20",
     "@types/mongodb": "^3.6.8",
     "@types/mongodb-memory-server": "^2.3.0",
     "@types/yargs": "^16.0.0",
+    "jest": "^26.6.3",
     "mongodb": "^3.6.4",
     "mongodb-memory-server": "^6.9.3",
     "mongoose": "^5.11.14",
