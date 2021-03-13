@@ -1,6 +1,6 @@
 {
   "name": "manggis",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mongoose schema and ref integrity validator",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
