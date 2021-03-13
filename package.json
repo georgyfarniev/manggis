@@ -28,7 +28,10 @@
     "url": "https://github.com/georgyfarniev/manggis/issues"
   },
   "homepage": "https://github.com/georgyfarniev/manggis#readme",
-  "dependencies": {
+  "peerDependencies": {
+    "mongoose": "*"
+  },
+  "devDependencies": {
     "@babel/preset-env": "^7.13.10",
     "@babel/preset-typescript": "^7.13.0",
     "@types/jest": "^26.0.20",
@@ -38,10 +41,7 @@
     "jest": "^26.6.3",
     "mongodb": "^3.6.4",
     "mongodb-memory-server": "^6.9.3",
-    "mongoose": "^5.11.14",
-    "yargs": "^16.2.0"
-  },
-  "devDependencies": {
+    "yargs": "^16.2.0",
     "@types/mongoose": "^5.10.3",
     "typescript": "^4.1.3"
   }
