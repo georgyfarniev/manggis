@@ -2,10 +2,9 @@
 import { Connection } from 'mongoose';
 import { validate } from '.'
 
-
 async function main() {
-  const { default: loadMongoose } = await import('./_manggisfile_test');
-  const connection: Connection = await loadMongoose();
+  /* !!! place your mongoose connection instance here !!! */
+  const connection: Connection = {} as Connection
 
   await validate(connection, {
     onError: ({ model, path, message}) => {

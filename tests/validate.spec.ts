@@ -60,7 +60,7 @@ describe('Low-level validation tests (private API)', () => {
     expect(FooWrapper).toBeDefined();
     expect(BarWrapper).toBeDefined();
 
-    await expect(FooWrapper.count()).resolves.toBeGreaterThan(0);
+    await expect(FooWrapper.countDocuments()).resolves.toBeGreaterThan(0);
   })
 
   test('test standard mongoose validation error reporting', async () => {
