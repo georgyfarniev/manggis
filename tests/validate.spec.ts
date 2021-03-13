@@ -1,20 +1,21 @@
 import 'jest'
-import { Document, Model, Connection } from 'mongoose'
-import { createEnhancedModel, verifySchemaForDocument } from '../src'
-import { IValidationContext, IValidationError, IValidationOptions } from '../src/types';
-import { createTestDatabase, destroyTestDatabase } from './_db'
+import {  Model, Connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
+import { createEnhancedModel, verifySchemaForDocument } from '../src'
+import { IValidationError, IValidationOptions } from '../src/types';
+import { createTestDatabase, destroyTestDatabase } from './_db'
+import { BAR_ROWS } from './_mock';
+
+const BASE_OPTIONS: IValidationOptions= {
+  verifyRefs: true,
+  verifySchema: true,
+}
 
 async function wrapModel(connection: Connection, model: Model<any>): Promise<Model<any>> {
-  const options: IValidationOptions = {
-    verifyRefs: true,
-    verifySchema: true,
-  };
-
   const wrappedModel = createEnhancedModel({
     connection,
     model,
-    options
+    options: BASE_OPTIONS
   });
 
   return wrappedModel;
@@ -24,8 +25,7 @@ async function verifyDoc(connection: Connection, model: Model<any>, obj: any) {
   const errors: IValidationError[] = [];
 
   const options: IValidationOptions = {
-    verifyRefs: true,
-    verifySchema: true,
+    ...BASE_OPTIONS,
     onError(err) { errors.push(err); }
   };
 
@@ -41,7 +41,7 @@ async function verifyDoc(connection: Connection, model: Model<any>, obj: any) {
   return errors;
 }
 
-describe('Validations', () => {
+describe('Low-level validation tests (private API)', () => {
   let connection: Connection
   let FooWrapper: Model<any>
   let BarWrapper: Model<any>
@@ -94,5 +94,26 @@ describe('Validations', () => {
       `Referenced document not found: ${nonexistingId}`
     );
   })
+
+  test('test valid ref to existing document', async () => {
+    const errors = await verifyDoc(connection, FooWrapper, {
+      name: 'foo2',
+      bar: BAR_ROWS[0]._id
+    });
+
+    expect(errors).toHaveLength(0);
+  })
+
+  test('test valid document not requiring ref', async () => {
+    const errors = await verifyDoc(connection, BarWrapper, {});
+    expect(errors).toHaveLength(1);
+    const [ error ] = errors;
+
+    expect(error.model).toBe('Bar');
+    expect(error.path).toBe('title');
+    expect(error.message).toBe('Path \`title\` is required.');
+  });
+
+  test.todo('add more sophisticated test cases');
 })
 
