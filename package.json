@@ -19,6 +19,9 @@
     "validation",
     "schema"
   ],
+  "files": [
+    "dist/**/*"
+  ],
   "author": "Georgy Farniev",
   "license": "MIT",
   "bugs": {
