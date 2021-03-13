@@ -7,7 +7,7 @@ async function main() {
   const connection: Connection = {} as Connection
 
   await validate(connection, {
-    onError: ({ model, path, message}) => {
+    onError: ({ model, path, message }) => {
       console.log(`    error [${model}.${path}]: ${message}`)
     },
     onModel(model) {

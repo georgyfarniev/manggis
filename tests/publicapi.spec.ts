@@ -18,6 +18,8 @@ describe('High-level public API unit test', () => {
   test('test global validation function to check all collections data', async () => {
     const errors: IValidationError[] = [];
 
+    const modelsBefore = Object.keys(connection.models);
+
     await validate(connection, {
       onError(err) { errors.push(err); },
       verifyRefs: true,
@@ -25,6 +27,11 @@ describe('High-level public API unit test', () => {
     });
 
     expect(errors).toHaveLength(2);
+
+    // ensure all cloned models has been removed after validation
+    const modelsAfter = Object.keys(connection.models);
+    expect(modelsAfter).toStrictEqual(modelsBefore)
+
     // TODO: better test for actual error data
   })
 
